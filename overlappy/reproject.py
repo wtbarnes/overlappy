@@ -18,7 +18,8 @@ def reproject_to_overlappogram(cube,
                                dispersion_angle=0*u.deg,
                                order=1,
                                observer=None,
-                               sum_over_lambda=True):
+                               sum_over_lambda=True,
+                               reproject_kwargs=None):
     """
     Reproject a spectral cube to an overlappogram.
 
@@ -53,8 +54,8 @@ def reproject_to_overlappogram(cube,
     wavelength = cube.axis_world_coords(0)[0].to('angstrom')
     pc_matrix = pcij_matrix(roll_angle, dispersion_angle, order=order)
     if scale is None:
-        scale = (u.Quantity(cd,cu) for cd,cu in
-                zip(cube.wcs.wcs.cdelt, cube.wcs.wcs.cunit))
+        scale = [u.Quantity(cd, f'{cu} / pix') for cd,cu in
+                 zip(cube.wcs.wcs.cdelt, cube.wcs.wcs.cunit)]
     overlap_wcs = overlappogram_fits_wcs(
         detector_shape,
         wavelength,
@@ -64,11 +65,13 @@ def reproject_to_overlappogram(cube,
         observer=observer,
     )
 
+    reproject_kwargs = {} if reproject_kwargs is None else reproject_kwargs
     overlap_data = reproject.reproject_interp(
         cube,
         overlap_wcs,
         shape_out=wavelength.shape + detector_shape,
         return_footprint=False,
+        **reproject_kwargs,
     )
 
     if sum_over_lambda:
