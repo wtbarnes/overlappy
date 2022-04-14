@@ -79,7 +79,6 @@ def pcij_to_keys(pcij_matrix):
     return pcij_keys
 
 
-
 def strided_array(array, N, **kwargs):
     """
     Return a "strided" version of the array.

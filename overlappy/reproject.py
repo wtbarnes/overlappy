@@ -19,7 +19,8 @@ def reproject_to_overlappogram(cube,
                                order=1,
                                observer=None,
                                sum_over_lambda=True,
-                               reproject_kwargs=None):
+                               reproject_kwargs=None,
+                               meta_keys=None):
     """
     Reproject a spectral cube to an overlappogram.
 
@@ -46,6 +47,8 @@ def reproject_to_overlappogram(cube,
         If True, sum over all layers in wavelength to create overlapped
         images. If False, each layer will be the reprojection of the FOV
         at that wavelength and everything else will be NaN.
+    meta_keys : `list`
+        Keys from spectral cube metadata to copy into overlappogram metadata.
 
     Returns
     --------
@@ -79,5 +82,10 @@ def reproject_to_overlappogram(cube,
         overlap_data[isnan] = 0.0
         overlap_data = overlap_data.sum(axis=0)
         overlap_data = strided_array(overlap_data, wavelength.shape[0])
+
+    meta = {}
+    if meta_keys is not None:
+        for k in meta_keys:
+            meta[k] = cube.meta.get(k)
     
-    return ndcube.NDCube(overlap_data, wcs=overlap_wcs, unit=cube.unit)
+    return ndcube.NDCube(overlap_data, wcs=overlap_wcs, unit=cube.unit, meta=meta)
