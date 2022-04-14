@@ -68,6 +68,7 @@ def overlappogram_fits_wcs(detector_shape,
                            wavelength:u.m,
                            scale,
                            reference_pixel:u.pix=None,
+                           reference_coord=None,
                            pc_matrix=None,
                            observer=None):
     # NOTE: We assume that the reference coord is (0,0,wave[0]) such that
@@ -81,6 +82,15 @@ def overlappogram_fits_wcs(detector_shape,
             (detector_shape[0] + 1) / 2,
             1,
         ) * u.pix
+    # FIXME: I don't think this is strictly correct to allow. Really, we should always
+    # be setting crval[1,2] to (0,0) (the center of the coordinate frame) and then 
+    # calculating the reference pixel appropriately.
+    if reference_coord is None:
+        reference_coord = (
+            0 * u.arcsec,
+            0 * u.arcsec,
+            wavelength[0],
+        )
     wcs_keys = {
         'WCSAXES': 3,
         'NAXIS1': detector_shape[1],
@@ -98,9 +108,9 @@ def overlappogram_fits_wcs(detector_shape,
         'CRPIX1': reference_pixel[0].value,
         'CRPIX2': reference_pixel[1].value,
         'CRPIX3': reference_pixel[2].value,
-        'CRVAL1': 0,
-        'CRVAL2': 0,
-        'CRVAL3': wavelength[0].to('angstrom').value,
+        'CRVAL1': reference_coord[0].to('arcsec').value,
+        'CRVAL2': reference_coord[1].to('arcsec').value,
+        'CRVAL3': reference_coord[2].to('angstrom').value,
     }
     wcs_keys = {**wcs_keys, **pcij_to_keys(pc_matrix)}
     if observer is not None:
