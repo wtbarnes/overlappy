@@ -54,6 +54,8 @@ def pcij_matrix(roll_angle:u.deg,
         # all of them.
         # This may be useful when plotting two slices of the overlappogram and displaying a wavelength axis.
         # However, this will not work when performing reprojections.
+        # If you want this capability, you should apply this PCij to your WCS after
+        # the fact.
         D[2,:] = [0, 1, 0]
     R_1 = rotation_matrix(dispersion_angle)
     # The operation here is (from R to L):
