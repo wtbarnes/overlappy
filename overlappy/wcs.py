@@ -9,7 +9,7 @@ from .util import pcij_to_keys, hgs_observer_to_keys
 
 
 @u.quantity_input
-def rotation_matrix(angle:u.deg):
+def rotation_matrix(angle: u.deg):
     return np.array([
         [np.cos(angle), np.sin(angle), 0],
         [-np.sin(angle), np.cos(angle), 0],
@@ -18,18 +18,17 @@ def rotation_matrix(angle:u.deg):
 
 
 @u.quantity_input
-def dispersion_matrix(order):
-    return np.array([
-        [1, 0, 0],
-        [0, 1, -order],
-        [0, 0, 1],
-    ])
+def dispersion_matrix(order, dispersion_axis=0):
+    dispersion_array = np.eye(3)
+    dispersion_array[dispersion_axis, 2] = -order
+    return dispersion_array
 
 
 @u.quantity_input
-def pcij_matrix(roll_angle:u.deg,
-                dispersion_angle:u.deg,
+def pcij_matrix(roll_angle: u.deg,
+                dispersion_angle: u.deg,
                 order=1,
+                dispersion_axis=0,
                 align_p2_wave=False):
     """
     Parameters
@@ -43,7 +42,7 @@ def pcij_matrix(roll_angle:u.deg,
         Order of the dispersion. Default is 1.
     """
     R_2 = rotation_matrix(roll_angle - dispersion_angle)
-    D = dispersion_matrix(order)
+    D = dispersion_matrix(order, dispersion_axis=dispersion_axis)
     if align_p2_wave:
         # This aligns the dispersion axis with the wavelength axis
         # and decorrelates wavelength with the the third "fake"
@@ -56,7 +55,8 @@ def pcij_matrix(roll_angle:u.deg,
         # However, this will not work when performing reprojections.
         # If you want this capability, you should apply this PCij to your WCS after
         # the fact.
-        D[2,:] = [0, 1, 0]
+        D[2, dispersion_axis] = 1
+        D[2, 2] = 0
     R_1 = rotation_matrix(dispersion_angle)
     # The operation here is (from R to L):
     # -- align dispersion axis with p2 pixel axis
@@ -67,9 +67,9 @@ def pcij_matrix(roll_angle:u.deg,
 
 @u.quantity_input
 def overlappogram_fits_wcs(detector_shape,
-                           wavelength:u.m,
+                           wavelength: u.m,
                            scale,
-                           reference_pixel:u.pix=None,
+                           reference_pixel: u.pix = None,
                            reference_coord=None,
                            pc_matrix=None,
                            observer=None):
