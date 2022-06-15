@@ -17,6 +17,7 @@ def reproject_to_overlappogram(cube,
                                scale=None,
                                roll_angle=0*u.deg,
                                dispersion_angle=0*u.deg,
+                               dispersion_axis=0,
                                order=1,
                                observer=None,
                                sum_over_lambda=True,
@@ -56,9 +57,10 @@ def reproject_to_overlappogram(cube,
     `ndcube.NDCube`
     """
     wavelength = cube.axis_world_coords(0)[0].to('angstrom')
-    pc_matrix = pcij_matrix(roll_angle, dispersion_angle, order=order)
+    pc_matrix = pcij_matrix(roll_angle, dispersion_angle,
+                            order=order, dispersion_axis=dispersion_axis)
     if scale is None:
-        scale = [u.Quantity(cd, f'{cu} / pix') for cd,cu in
+        scale = [u.Quantity(cd, f'{cu} / pix') for cd, cu in
                  zip(cube.wcs.wcs.cdelt, cube.wcs.wcs.cunit)]
     overlap_wcs = overlappogram_fits_wcs(
         detector_shape,
