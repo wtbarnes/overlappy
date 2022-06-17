@@ -91,5 +91,5 @@ def reproject_to_overlappogram(cube,
     if meta_keys is not None:
         for k in meta_keys:
             meta[k] = cube.meta.get(k)
-    
+
     return ndcube.NDCube(overlap_data, wcs=overlap_wcs, unit=cube.unit, meta=meta)
