@@ -4,11 +4,10 @@ Utility functions
 import numpy as np
 import astropy.units as u
 import astropy.constants
-from sunpy.visualization.wcsaxes_compat import wcsaxes_heliographic_overlay
-
 
 
 def draw_hgs_grid(ax, observer):
+    from sunpy.visualization.wcsaxes_compat import wcsaxes_heliographic_overlay
     hgs_grid = wcsaxes_heliographic_overlay(
         ax,
         obstime=observer.obstime,
@@ -34,17 +33,17 @@ def color_lat_lon_axes(ax,
     lat = ax.coords[1]
     # Ticks-lon
     lon.set_ticklabel_position('lb')
-    lon.set_axislabel(ax.get_xlabel(),color=lon_color)
+    lon.set_axislabel(ax.get_xlabel(), color=lon_color)
     lon.set_ticklabel(color=lon_color)
     lon.set_ticks(**lon_tick_ops)
     # Ticks-lat
     lat.set_ticklabel_position('lb')
-    lat.set_axislabel(ax.get_ylabel(),color=lat_color)
+    lat.set_axislabel(ax.get_ylabel(), color=lat_color)
     lat.set_ticklabel(color=lat_color)
     lat.set_ticks(**lat_tick_ops)
     # Grid
-    lon.grid(color=lon_color,grid_type='contours')
-    lat.grid(color=lat_color,grid_type='contours')
+    lon.grid(color=lon_color, grid_type='contours')
+    lat.grid(color=lat_color, grid_type='contours')
     # If wavelength axis is set, do some styling there too
     if len(ax.coords.get_coord_range()) > 2:
         wvl = ax.coords[2]
@@ -58,7 +57,8 @@ def color_lat_lon_axes(ax,
         wvl.set_axislabel('Wavelength [Angstrom]', color=wvl_color)
         wvl.grid(color=wvl_color, grid_type='contours')
         return lon, lat, wvl
-    return lon,lat
+
+    return lon, lat
 
 
 def hgs_observer_to_keys(observer):
@@ -82,11 +82,11 @@ def pcij_to_keys(pcij_matrix):
 def strided_array(array, N, **kwargs):
     """
     Return a "strided" version of the array.
-    
+
     For an array of shape (N_2, N_1), this
     function creates an array of dimension (N, N_2, N_1)
     where each layer is a view of the original array.
-    In other words, the values at (k,i,j) and (k+1,i,j) 
+    In other words, the values at (k,i,j) and (k+1,i,j)
     point to the same place in memory.
     """
     return np.lib.stride_tricks.as_strided(
