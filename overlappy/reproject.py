@@ -1,6 +1,8 @@
 """
 Tools for reprojecting spectral cubes to overlappograms
 """
+import copy
+
 import numpy as np
 import astropy.units as u
 import ndcube
@@ -21,8 +23,10 @@ def reproject_to_overlappogram(cube,
                                order=1,
                                observer=None,
                                sum_over_lambda=True,
+                               algorithm='interpolation',
                                reproject_kwargs=None,
-                               meta_keys=None):
+                               meta_keys=None,
+                               use_dask=False):
     """
     Reproject a spectral cube to an overlappogram.
 
@@ -51,6 +55,9 @@ def reproject_to_overlappogram(cube,
         at that wavelength and everything else will be NaN.
     meta_keys : `list`
         Keys from spectral cube metadata to copy into overlappogram metadata.
+    use_dask : `bool`
+        If True, parallelize the reprojection with Dask.
+        Requires first starting a Dask client.
 
     Returns
     --------
@@ -72,19 +79,56 @@ def reproject_to_overlappogram(cube,
         observer=observer,
     )
 
+    functions = {
+        'interpolation': reproject.reproject_interp,
+        'adaptive': reproject.reproject_adaptive,
+        'exact': reproject.reproject_exact
+    }
     reproject_kwargs = {} if reproject_kwargs is None else reproject_kwargs
-    overlap_data = reproject.reproject_interp(
-        cube,
-        overlap_wcs,
-        shape_out=wavelength.shape + detector_shape,
-        return_footprint=False,
-        **reproject_kwargs,
-    )
+
+    if use_dask:
+        import distributed
+        import dask.array
+        client = distributed.get_client()
+        # Lay out per slice reproject function
+
+        def _reproject_slice(cube_slice, wcs_slice, repr_kwargs=None):
+            return functions[algorithm](
+                cube_slice,
+                wcs_slice,
+                shape_out=wcs_slice.array_shape,
+                return_footprint=False,
+                **repr_kwargs,
+            ).squeeze()
+
+        # Build WCS and data slices
+        indices = list(range(cube.data.shape[0]))
+        cube_slices = client.scatter([cube[i:i+1] for i in indices])
+        wcs_slices = [overlap_wcs[i:i+1] for i in indices]
+        # Map reproject to slice
+        slice_futures = client.map(_reproject_slice,
+                                   cube_slices,
+                                   wcs_slices,
+                                   repr_kwargs=reproject_kwargs)
+        # Stack resulting arrays
+        overlap_data = dask.array.stack([
+            dask.array.from_delayed(f, detector_shape, dtype=cube.data.dtype)
+            for f in slice_futures
+        ])
+    else:
+        shape_out = wavelength.shape + detector_shape
+        overlap_data = functions[algorithm](
+            cube,
+            overlap_wcs,
+            shape_out=shape_out,
+            return_footprint=False,
+            **reproject_kwargs,
+        )
 
     if sum_over_lambda:
-        isnan = np.where(np.isnan(overlap_data))
-        overlap_data[isnan] = 0.0
-        overlap_data = overlap_data.sum(axis=0)
+        overlap_data = np.where(np.isnan(overlap_data), 0.0, overlap_data).sum(axis=0)
+        if use_dask:
+            overlap_data = overlap_data.compute()
         overlap_data = strided_array(overlap_data, wavelength.shape[0])
 
     meta = {}
