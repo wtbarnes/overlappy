@@ -55,7 +55,7 @@ def reproject_to_overlappogram(cube,
         at that wavelength and everything else will be NaN.
     meta_keys : `list`
         Keys from spectral cube metadata to copy into overlappogram metadata.
-    use_daks : `bool`
+    use_dask : `bool`
         If True, parallelize the reprojection with Dask.
         Requires first starting a Dask client.
 
