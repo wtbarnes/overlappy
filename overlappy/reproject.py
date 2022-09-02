@@ -55,6 +55,9 @@ def reproject_to_overlappogram(cube,
         at that wavelength and everything else will be NaN.
     meta_keys : `list`
         Keys from spectral cube metadata to copy into overlappogram metadata.
+    use_daks : `bool`
+        If True, parallelize the reprojection with Dask.
+        Requires first starting a Dask client.
 
     Returns
     --------
@@ -98,25 +101,10 @@ def reproject_to_overlappogram(cube,
                 **repr_kwargs,
             ).squeeze()
 
-        # Build WCS and data per slice
+        # Build WCS and data slices
         indices = list(range(cube.data.shape[0]))
-        cube_slices = client.scatter([cube[i:i+1] for i in indices], direct=True)
-        wcs_slices = []
-        for i in indices:
-            # NOTE: Adjust the reference pixel such that we are reprojecting to the
-            # correct spot on the detector
-            ref_pix = copy.deepcopy(reference_pixel)
-            ref_pix[2] = (-i + 1) * u.pix
-            wcs_slice = overlappogram_fits_wcs(
-                detector_shape,
-                wavelength[i:i+1],
-                scale,
-                reference_pixel=ref_pix,
-                reference_coord=reference_coord,
-                pc_matrix=pc_matrix,
-                observer=observer,
-            )
-            wcs_slices.append(wcs_slice)
+        cube_slices = client.scatter([cube[i:i+1] for i in indices])
+        wcs_slices = [overlap_wcs[i:i+1] for i in indices]
         # Map reproject to slice
         slice_futures = client.map(_reproject_slice,
                                    cube_slices,
