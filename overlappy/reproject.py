@@ -88,17 +88,19 @@ def reproject_to_overlappogram(cube,
 
     if use_dask:
         import distributed
+        import dask
         import dask.array
         client = distributed.get_client()
         # Lay out per slice reproject function
 
-        def _reproject_slice(cube_slice, wcs_slice, repr_kwargs=None):
+        @dask.delayed
+        def _reproject_slice(cube_slice, wcs_slice):
             return functions[algorithm](
                 cube_slice,
                 wcs_slice,
                 shape_out=wcs_slice.array_shape,
                 return_footprint=False,
-                **repr_kwargs,
+                **reproject_kwargs,
             ).squeeze()
 
         # Build WCS and data slices
@@ -106,14 +108,12 @@ def reproject_to_overlappogram(cube,
         cube_slices = client.scatter([cube[i:i+1] for i in indices])
         wcs_slices = [overlap_wcs[i:i+1] for i in indices]
         # Map reproject to slice
-        slice_futures = client.map(_reproject_slice,
-                                   cube_slices,
-                                   wcs_slices,
-                                   repr_kwargs=reproject_kwargs)
+        delayed_slices = [_reproject_slice(cs, ws)
+                         for cs, ws in zip(cube_slices, wcs_slices)]
         # Stack resulting arrays
         overlap_data = dask.array.stack([
             dask.array.from_delayed(f, detector_shape, dtype=cube.data.dtype)
-            for f in slice_futures
+            for f in delayed_slices
         ])
     else:
         shape_out = wavelength.shape + detector_shape
