@@ -3,7 +3,7 @@ Utility functions for writing overlappogram data I/O
 """
 import numpy as np
 import astropy.wcs
-import sunpy.io.fits
+import sunpy.io._fits as sunpy_fits
 import ndcube
 
 from .util import strided_array
@@ -17,7 +17,7 @@ def write_overlappogram(cube, filename):
     # wavelength contains the same data array.
     header['NWAVE'] = cube.data.shape[0]
     header['BUNIT'] = cube.unit.to_string()
-    sunpy.io.fits.write(
+    sunpy_fits.write(
         filename,
         cube.data[0],
         header,
@@ -25,7 +25,7 @@ def write_overlappogram(cube, filename):
 
 
 def read_overlappogram(filename, flat=True):
-    pair = sunpy.io.fits.read(filename)
+    pair = sunpy_fits.read(filename)
     data, header = pair[0]
     if flat:
         header['NAXIS'] = 3
