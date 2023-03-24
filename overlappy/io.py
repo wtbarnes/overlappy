@@ -1,7 +1,6 @@
 """
 Utility functions for writing overlappogram data I/O
 """
-import numpy as np
 import astropy.wcs
 import sunpy.io._fits as sunpy_fits
 import ndcube

@@ -1,8 +1,6 @@
 """
 Tools for reprojecting spectral cubes to overlappograms
 """
-import copy
-
 import numpy as np
 import astropy.units as u
 import ndcube
@@ -109,7 +107,7 @@ def reproject_to_overlappogram(cube,
         wcs_slices = [overlap_wcs[i:i+1] for i in indices]
         # Map reproject to slice
         delayed_slices = [_reproject_slice(cs, ws)
-                         for cs, ws in zip(cube_slices, wcs_slices)]
+                          for cs, ws in zip(cube_slices, wcs_slices)]
         # Stack resulting arrays
         overlap_data = dask.array.stack([
             dask.array.from_delayed(f, detector_shape, dtype=cube.data.dtype)
