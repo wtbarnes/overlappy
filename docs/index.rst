@@ -7,11 +7,5 @@ This is the documentation for overlappy.
    :maxdepth: 2
    :caption: Contents:
 
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   code_ref
+   generated/gallery/index
