@@ -7,61 +7,92 @@ import astropy.wcs
 
 from .util import pcij_to_keys, hgs_observer_to_keys
 
+__all__ = [
+    "rotation_matrix",
+    "dispersion_matrix",
+    "pcij_matrix",
+    "overlappogram_fits_wcs",
+]
+
 
 @u.quantity_input
 def rotation_matrix(angle: u.deg):
+    r"""
+    3D rotation matrix that applies a rotation in only the first two dimensions.
+    This has the form:
+
+    .. math::
+
+        R(\theta) = \begin{bmatrix}
+                        \cos{\theta} & -\sin{\theta} & 0 \\
+                        \sin{\theta} & \cos{\theta} & 0 \\
+                        0 & 0 & 1
+                    \end{bmatrix}
+    """
     return np.array([
-        [np.cos(angle), np.sin(angle), 0],
-        [-np.sin(angle), np.cos(angle), 0],
+        [np.cos(angle), -np.sin(angle), 0],
+        [np.sin(angle), np.cos(angle), 0],
         [0, 0, 1]
     ])
 
 
 @u.quantity_input
-def dispersion_matrix(order, dispersion_axis=0):
+def dispersion_matrix(order):
+    r"""
+    This operation represents a skew according to the spectral order
+    along the first pixel axis. This matrix has the form:
+
+    .. math::
+
+        D(\mu) = \begin{bmatrix}
+                    1 & 0 & -\mu \\
+                    0 & 1 & 0 \\
+                    0 & 0 & 1
+                 \end{bmatrix}
+    """
     dispersion_array = np.eye(3)
-    dispersion_array[dispersion_axis, 2] = -order
+    dispersion_array[0, 2] = -order
     return dispersion_array
 
 
 @u.quantity_input
 def pcij_matrix(roll_angle: u.deg,
                 dispersion_angle: u.deg,
-                order=1,
-                dispersion_axis=0,
-                align_p2_wave=False):
-    """
+                order=1):
+    r"""
+    Create a ``PC_ij`` matrix for an slitless spectrogram.
+
+    Calculate a ``PC_ij`` matrix for a slitless spectrogram with a grating angle
+    of :math:`\gamma`, a satellite roll angle of :math:`\alpha`, and a spectral
+    dispersion of :math:`\mu`. This has the form,
+
+    .. math::
+
+        P(\alpha, \gamma, \mu) &= R(\alpha - \gamma)D(\mu)R(\gamma) \\
+                               &= \begin{bmatrix}
+                                    \cos{\alpha} & -\sin{\alpha} & -\mu\cos{\alpha - \gamma}\\
+                                    \sin{\alpha} & \cos{\alpha} & -\mu\sin{\alpha - \gamma}\\
+                                    0 & 0 & 1
+                                   \end{bmatrix}
+
     Parameters
     ----------
-    roll_angle: 
+    roll_angle : `~astropy.units.Quantity`
         Angle between the second pixel axis and the y-like
-        world axis.
-    dispersion_angle:
-        Angle between the wavelength (dispersion) axis and the second pixel axis.
-    order:
-        Order of the dispersion. Default is 1.
+        world axis. This is the roll angle of the satellite.
+    dispersion_angle : `~astropy.units.Quantity`
+        Angle between the direction of spectral dispersion and the x-like pixel axis.
+        This is the angle between the dispersive element and the detector.
+    order : `int`, optional
+        Order of the spectral dispersion. Default is 1.
     """
     R_2 = rotation_matrix(roll_angle - dispersion_angle)
-    D = dispersion_matrix(order, dispersion_axis=dispersion_axis)
-    if align_p2_wave:
-        # This aligns the dispersion axis with the wavelength axis
-        # and decorrelates wavelength with the the third "fake"
-        # pixel axis. This means that wavelength *does not* vary
-        # as you increment that third axis.
-        # This is not strictly correct as the world grid at each p3
-        # should only correspond to a particular wavelength, not
-        # all of them.
-        # This may be useful when plotting two slices of the overlappogram
-        # and displaying a wavelength axis. However, this will not work
-        # when performing reprojections. If you want this capability, you
-        # should apply this PCij to your WCS after the fact.
-        D[2, dispersion_axis] = 1
-        D[2, 2] = 0
+    D = dispersion_matrix(order)
     R_1 = rotation_matrix(dispersion_angle)
     # The operation here is (from R to L):
-    # -- align dispersion axis with p2 pixel axis
-    # -- disperse in spectral order along p2 axis
-    # -- apply roll angle rotation
+    # -- align dispersion axis with p1 pixel axis
+    # -- disperse in spectral order along p1 axis
+    # -- apply effective roll angle rotation
     return R_2 @ D @ R_1
 
 
