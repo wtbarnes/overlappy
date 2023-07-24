@@ -5,6 +5,14 @@ import numpy as np
 import astropy.units as u
 import astropy.constants
 
+__all__ = [
+    "draw_hgs_grid",
+    "color_lat_lon_axes",
+    "hgs_observer_to_keys",
+    "pcij_to_keys",
+    "strided_array",
+]
+
 
 def draw_hgs_grid(ax, observer):
     from sunpy.visualization.wcsaxes_compat import wcsaxes_heliographic_overlay

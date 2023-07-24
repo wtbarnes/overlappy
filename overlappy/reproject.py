@@ -9,6 +9,10 @@ import reproject
 from .wcs import pcij_matrix, overlappogram_fits_wcs
 from .util import strided_array
 
+__all__ = [
+    "reproject_to_overlappogram",
+]
+
 
 def reproject_to_overlappogram(cube,
                                detector_shape,
@@ -17,7 +21,6 @@ def reproject_to_overlappogram(cube,
                                scale=None,
                                roll_angle=0*u.deg,
                                dispersion_angle=0*u.deg,
-                               dispersion_axis=0,
                                order=1,
                                observer=None,
                                sum_over_lambda=True,
@@ -63,7 +66,7 @@ def reproject_to_overlappogram(cube,
     """
     wavelength = cube.axis_world_coords(0)[0].to('angstrom')
     pc_matrix = pcij_matrix(roll_angle, dispersion_angle,
-                            order=order, dispersion_axis=dispersion_axis)
+                            order=order)
     if scale is None:
         scale = [u.Quantity(cd, f'{cu} / pix') for cd, cu in
                  zip(cube.wcs.wcs.cdelt, cube.wcs.wcs.cunit)]
