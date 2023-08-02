@@ -70,8 +70,8 @@ def pcij_matrix(roll_angle: u.deg,
 
         P(\alpha, \gamma, \mu) &= R(\alpha - \gamma)D(\mu)R(\gamma) \\
                                &= \begin{bmatrix}
-                                    \cos{\alpha} & -\sin{\alpha} & -\mu\cos{\alpha - \gamma}\\
-                                    \sin{\alpha} & \cos{\alpha} & -\mu\sin{\alpha - \gamma}\\
+                                    \cos{(\alpha)} & -\sin{(\alpha)} & -\mu\cos{(\alpha - \gamma)}\\
+                                    \sin{(\alpha)} & \cos{(\alpha)} & -\mu\sin{(\alpha - \gamma)}\\
                                     0 & 0 & 1
                                    \end{bmatrix}
 
