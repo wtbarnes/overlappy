@@ -97,8 +97,7 @@ def pcij_matrix(roll_angle: u.deg,
 
 
 @u.quantity_input
-def overlappogram_fits_wcs(detector_shape,
-                           wavelength: u.angstrom,
+def overlappogram_fits_wcs(data_shape,
                            scale,
                            reference_pixel: u.pix = None,
                            reference_coord=None,
@@ -109,11 +108,10 @@ def overlappogram_fits_wcs(detector_shape,
 
     Parameters
     ----------
-    detector_shape: `tuple`
-        Dimensions of detector (in row-major ordering)
-    wavelength: `~astropy.units.Quantity`
-        Wavelength array corresponding to the dispersion axis. This
-        must be evenly spaced.
+    data_shape: `tuple`
+        Dimensions of detector (in row-major ordering), with the leading dimension corresponding
+        to wavelength. Note that the ordering here is opposite that of the other quantities
+        which are in WCS/Cartesian-like ordering.
     scale: `tuple`
         The plate scale of the spatial and spectral directions. Each
         should be a `~astropy.units.Quantity`
@@ -132,7 +130,7 @@ def overlappogram_fits_wcs(detector_shape,
     observer: `~astropy.coordinates.SkyCoord`, optional
         Observer coordinate that defines the Helioprojective frame of the observer
         coordinate. By default will not be included. This also sets the 
-        date. 
+        date.
 
     Returns
     -------
@@ -146,8 +144,8 @@ def overlappogram_fits_wcs(detector_shape,
     # of the detector.
     if reference_pixel is None:
         reference_pixel = (
-            (detector_shape[1] - 1) / 2,
-            (detector_shape[0] - 1) / 2,
+            (data_shape[2] - 1) / 2,
+            (data_shape[1] - 1) / 2,
             0,
         ) * u.pix
     # FIXME: I don't think this is strictly correct to allow. Really, we should always
@@ -161,9 +159,9 @@ def overlappogram_fits_wcs(detector_shape,
         )
     wcs_keys = {
         'WCSAXES': 3,
-        'NAXIS1': detector_shape[1],
-        'NAXIS2': detector_shape[0],
-        'NAXIS3': wavelength.shape[0],
+        'NAXIS1': data_shape[2],
+        'NAXIS2': data_shape[1],
+        'NAXIS3': data_shape[0],
         'CDELT1': scale[0].to_value('arcsec / pix'),
         'CDELT2': scale[1].to_value('arcsec / pix'),
         'CDELT3': scale[2].to_value('angstrom / pix'),

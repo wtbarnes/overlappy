@@ -71,8 +71,7 @@ def reproject_to_overlappogram(cube,
         scale = [u.Quantity(cd, f'{cu} / pix') for cd, cu in
                  zip(cube.wcs.wcs.cdelt, cube.wcs.wcs.cunit)]
     overlap_wcs = overlappogram_fits_wcs(
-        detector_shape,
-        wavelength,
+        wavelength.shape+detector_shape,
         scale,
         reference_pixel=reference_pixel,
         reference_coord=reference_coord,
@@ -88,6 +87,7 @@ def reproject_to_overlappogram(cube,
     reproject_kwargs = {} if reproject_kwargs is None else reproject_kwargs
 
     if use_dask:
+        raise NotImplementedError('This currently does not work due to changes in wavelength axis.')
         import distributed
         import dask
         import dask.array
