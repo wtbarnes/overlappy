@@ -28,8 +28,8 @@ observer = get_earth('2020-01-01')
 
 def make_grid_plot(alpha, gamma, mu):
     pcij = pcij_matrix(alpha, gamma, mu)
-    wcs = overlappogram_fits_wcs(shape,
-                                 wavelength,
+    print('PC_ij = ', pcij)
+    wcs = overlappogram_fits_wcs(wavelength.shape+shape,
                                  (spatial_platescale[0], spatial_platescale[1], spectral_platescale),
                                  pc_matrix=pcij,
                                  observer=observer)
