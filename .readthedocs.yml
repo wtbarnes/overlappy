@@ -9,14 +9,13 @@ version: 2
 build:
   os: ubuntu-22.04
   tools:
-    python: "mambaforge-4.10"
+    python: "3.8"
 
 # Build documentation in the "docs/" directory with Sphinx
 sphinx:
    configuration: docs/conf.py
 
 python:
-  version: 3.12
   install:
     - method: pip
       path: .
