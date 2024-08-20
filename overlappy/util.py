@@ -32,7 +32,8 @@ def color_lat_lon_axes(ax,
                        wvl_color='C4',
                        lat_tick_ops=None,
                        lon_tick_ops=None,
-                       wvl_tick_ops=None):
+                       wvl_tick_ops=None,
+                       alpha=1):
     lat_tick_ops = {} if lat_tick_ops is None else lat_tick_ops
     lon_tick_ops = {} if lon_tick_ops is None else lon_tick_ops
     lat_tick_ops['color'] = lat_color
@@ -50,8 +51,8 @@ def color_lat_lon_axes(ax,
     lat.set_ticklabel(color=lat_color)
     lat.set_ticks(**lat_tick_ops)
     # Grid
-    lon.grid(color=lon_color, grid_type='contours')
-    lat.grid(color=lat_color, grid_type='contours')
+    lon.grid(color=lon_color, grid_type='contours', alpha=alpha)
+    lat.grid(color=lat_color, grid_type='contours', alpha=alpha)
     # If wavelength axis is set, do some styling there too
     if len(ax.coords.get_coord_range()) > 2:
         wvl = ax.coords[2]
@@ -63,7 +64,7 @@ def color_lat_lon_axes(ax,
         wvl.set_ticklabel(color=wvl_color)
         wvl.set_ticks(color=wvl_color)
         wvl.set_axislabel('Wavelength [Angstrom]', color=wvl_color)
-        wvl.grid(color=wvl_color, grid_type='contours')
+        wvl.grid(color=wvl_color, grid_type='contours', alpha=alpha)
         return lon, lat, wvl
 
     return lon, lat
